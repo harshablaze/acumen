@@ -93,12 +93,6 @@ def decoder(fileupd):
                 elif(re.match("3+.+.+126520+.+.+.",res[1][0])!=None) :
                     cnt+=1
                     branch[6].append(createObj(res[0],res[j]))
-                
-
-    def sectionDiv(roll):
-        return re.match('3..1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))|(L((1[3-9])|2[0-4]))',roll)!=None
-
-    print(sectionDiv("318126510L21"))
 
     branchdf=[]
     for data in branch :
