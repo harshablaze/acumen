@@ -106,7 +106,10 @@ def decoder(fileupd):
     cse["a"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0(([0-5][0-9])|(60)))|(L((0[0-9])|1[012])))')]
     cse["b"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))|(L((1[3-9])|2[0-4]))')]
     cse["c"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((1((2[1-9])|([3-8][0-9]))))|(L((2[5-9])|[34][0-9]))')]
-    resp = []
+    resp = {}
+    resp["secdata"] = {}
+    resp["classdata"] = {}
+    resp["classdata"]["subjects"] = []
     for section in cse:
         secdata = {}
         totalno = cse[section].Rollno.count()
@@ -123,7 +126,19 @@ def decoder(fileupd):
             secdata["subjects"].append(subj)
             # resp.append(subject+" : "+str(round(((totalno-cse[section].query(subject+' =="F"')[subject].count())/cse[section].Rollno.count())*100,2))+", count: "+str(totalno-cse[section].query(subject+' =="F"')[subject].count())+"\n")
         # print("\n")
-        resp.append(secdata)
+        resp["secdata"][section] = secdata
+    resp["classdata"]["total"] = int(branchdf[2].Rollno.count())
+    for subject in branchdf[2].columns[3:]:
+        subj = {}
+        subj["name"] = subject
+        subj["totalno"] = resp["classdata"]["total"]
+        subj["failcnt"] = int(branchdf[2].query(subject+' =="F"')[subject].count())
+        subj["passcnt"] = int(subj["totalno"]-subj["failcnt"])
+        subj["passper"] = round((subj["passcnt"]/subj["totalno"])*100,2)
+        resp["classdata"]["subjects"].append(subj)
+    resp["classdata"]["semfail"] = resp["classdata"]["total"] - int(branchdf[2].SGPA.count())
+    resp["classdata"]["overallfail"] = resp["classdata"]["total"] - int(branchdf[2].CGPA.count())
+    
     return resp
     
 
@@ -133,5 +148,8 @@ def index(request):
     if(request.method == 'POST') :
         fileup = request.FILES["pdffile"]
         # data = fileup.read()
-        return JsonResponse(decoder(fileup),safe=False)
+        try:
+            return JsonResponse(decoder(fileup),safe=False)
+        except:
+            return JsonResponse({"error":True},safe=False)
     return HttpResponse("Hello")
