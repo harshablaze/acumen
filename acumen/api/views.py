@@ -103,11 +103,11 @@ def decoder(fileupd):
         branchdf.append(bdf)
 
     cse={}
-    cse["a"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0(([0-5][0-9])|(60)))|(L((0[0-9])|1[012])))')]
-    cse["b"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))|(L((1[3-9])|2[0-4]))')]
-    cse["c"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((1((2[1-9])|([3-8][0-9]))))|(L((2[5-9])|[34][0-9]))')]
+    cse["A"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0(([0-5][0-9])|(60)))|(L((0[0-9])|1[012])))')]
+    cse["B"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))|(L((1[3-9])|2[0-4]))')]
+    cse["C"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((1((2[1-9])|([3-8][0-9]))))|(L((2[5-9])|[34][0-9]))')]
     resp = {}
-    resp["secdata"] = {}
+    resp["secdata"] = []
     resp["classdata"] = {}
     resp["classdata"]["subjects"] = []
     for section in cse:
@@ -120,13 +120,20 @@ def decoder(fileupd):
         for subject in cse[section].columns[3:]:
             subj = {}
             subj["name"] = subject
+            subj["grades"] = {}
+            for gra in grade.keys():
+                subj["grades"][gra] = int(cse[section].query(subject+' =="'+gra+'"')[subject].count())
             subj["failcnt"] = int(cse[section].query(subject+' =="F"')[subject].count())
             subj["passcnt"] = int(totalno-subj["failcnt"])
             subj["passper"] = round((subj["passcnt"]/totalno)*100,2)
             secdata["subjects"].append(subj)
             # resp.append(subject+" : "+str(round(((totalno-cse[section].query(subject+' =="F"')[subject].count())/cse[section].Rollno.count())*100,2))+", count: "+str(totalno-cse[section].query(subject+' =="F"')[subject].count())+"\n")
         # print("\n")
-        resp["secdata"][section] = secdata
+        secdata["semfail"] = secdata["total"] - int(cse[section].SGPA.count())
+        secdata["passcnt"] = int(cse[section].SGPA.count())
+        secdata["passper"] = round((secdata["passcnt"]/totalno)*100,2)
+        secdata["overallfail"] = secdata["total"] - int(cse[section].CGPA.count())
+        resp["secdata"].append(secdata)
     resp["classdata"]["total"] = int(branchdf[2].Rollno.count())
     for subject in branchdf[2].columns[3:]:
         subj = {}
@@ -137,8 +144,10 @@ def decoder(fileupd):
         subj["passper"] = round((subj["passcnt"]/subj["totalno"])*100,2)
         resp["classdata"]["subjects"].append(subj)
     resp["classdata"]["semfail"] = resp["classdata"]["total"] - int(branchdf[2].SGPA.count())
+    resp["classdata"]["passcnt"] = int(branchdf[2].SGPA.count())
+    resp["classdata"]["passper"] = round((resp["classdata"]["passcnt"]/int(branchdf[2].Rollno.count()))*100,2)
     resp["classdata"]["overallfail"] = resp["classdata"]["total"] - int(branchdf[2].CGPA.count())
-    
+    resp["error"] = False
     return resp
     
 
@@ -150,6 +159,6 @@ def index(request):
         # data = fileup.read()
         try:
             return JsonResponse(decoder(fileup),safe=False)
-        except:
-            return JsonResponse({"error":True},safe=False)
+        except Exception as e:
+            return JsonResponse({"error":True,"text":str(e)},safe=False)
     return HttpResponse("Hello")
