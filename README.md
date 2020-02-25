@@ -11,7 +11,7 @@ python -m venv env
 pip install -r requirements.txt
 ```
 
-Use [yarn](https://classic.yarnpkg.com/latest.msi) or [npm](https://nodejs.org/dist/v12.16.1/node-v12.16.1-x64.msi)
+Use [yarn](https://classic.yarnpkg.com/latest.msi)(Faster builds) or [npm](https://nodejs.org/dist/v12.16.1/node-v12.16.1-x64.msi)(mandatory)
 
 #### For yarn
 ```bash
