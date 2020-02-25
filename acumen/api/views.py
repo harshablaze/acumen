@@ -3,9 +3,19 @@ from django.http import HttpResponse,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from tabula import convert_into,read_pdf
 import pandas as pd
+import mysql.connector
 import numpy as np
 import re, json
 # Create your views here.
+
+mydb = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  passwd="",
+  database="acumen"
+)
+# print(mydb)
+# mycursor = mydb.cursor()
 
 def createObj(ip1,res):
     v = {}
@@ -18,10 +28,23 @@ def createObj(ip1,res):
         itera+=1
     return v
 
+def df_column_uniquify(df):
+    df_columns = df.columns
+    new_columns = []
+    for item in df_columns:
+        counter = 0
+        newitem = item
+        while newitem in new_columns:
+            counter += 1
+            newitem = "{}_{}".format(item, counter)
+        new_columns.append(newitem)
+    df.columns = new_columns
+    return df
 
 def decoder(fileupd):
     # data = fileupd.read()
     df = read_pdf(fileupd,spreadsheet=True,stream=True,multiple_tables=True,pages="all",guess=False)
+    # df = df_column_uniquify(df)
     cnt = 0
     branch = [[],[],[],[],[],[],[],[]]
     branchsubs = [[],[],[],[],[],[],[],[]]
@@ -72,25 +95,25 @@ def decoder(fileupd):
         for j in range(1,len(res)):
             if isinstance(res[j][0],str):
                 # if(("3171" in res[j][0]) or ("3181" in res[j][0]) or ("3161" in res[j][0])):
-                if(re.match("3+.+.+126510+.+.+.",res[j][0])!=None):
+                if(re.match("3..126510...",res[j][0])!=None):
                     cnt+=1
                     branch[2].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126502+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126502...",res[1][0])!=None) :
                     cnt+=1
                     branch[0].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126508+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126508...",res[1][0])!=None) :
                     cnt+=1
                     branch[1].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126511+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126511...",res[1][0])!=None) :
                     cnt+=1
                     branch[3].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126512+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126512...",res[1][0])!=None) :
                     cnt+=1
                     branch[4].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126514+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126514...",res[1][0])!=None) :
                     cnt+=1
                     branch[5].append(createObj(res[0],res[j]))
-                elif(re.match("3+.+.+126520+.+.+.",res[1][0])!=None) :
+                elif(re.match("3..126520...",res[1][0])!=None) :
                     cnt+=1
                     branch[6].append(createObj(res[0],res[j]))
 
@@ -101,6 +124,7 @@ def decoder(fileupd):
         bdf.columns = bdf.columns.str.replace('-', '')
         bdf.columns = bdf.columns.str.replace(' ', '')
         branchdf.append(bdf)
+
 
     cse={}
     cse["A"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0(([0-5][0-9])|(60)))|(L((0[0-9])|1[012])))')]
@@ -121,11 +145,13 @@ def decoder(fileupd):
             subj = {}
             subj["name"] = subject
             subj["grades"] = {}
+            subj["subcnt"] = 0
             for gra in grade.keys():
                 subj["grades"][gra] = int(cse[section].query(subject+' =="'+gra+'"')[subject].count())
+                subj["subcnt"] += subj["grades"][gra]
             subj["failcnt"] = int(cse[section].query(subject+' =="F"')[subject].count())
-            subj["passcnt"] = int(totalno-subj["failcnt"])
-            subj["passper"] = round((subj["passcnt"]/totalno)*100,2)
+            subj["passcnt"] = int(subj["subcnt"]-subj["failcnt"])
+            subj["passper"] = round((subj["passcnt"]/subj["subcnt"])*100,2)
             secdata["subjects"].append(subj)
             # resp.append(subject+" : "+str(round(((totalno-cse[section].query(subject+' =="F"')[subject].count())/cse[section].Rollno.count())*100,2))+", count: "+str(totalno-cse[section].query(subject+' =="F"')[subject].count())+"\n")
         # print("\n")
@@ -158,7 +184,53 @@ def index(request):
         fileup = request.FILES["pdffile"]
         # data = fileup.read()
         try:
-            return JsonResponse(decoder(fileup),safe=False)
+            data = decoder(fileup)
+            mycursor = mydb.cursor()
+            sql = "INSERT INTO `results`(`batch`, `year`, `sem`, `data`) VALUES (%s,%s,%s,%s)"
+            # print(request.POST['batch'],request.POST['year'],request.POST['sem'],data)
+            val = (request.POST['batch'],request.POST['year'],request.POST['sem'],json.dumps(data))
+            mycursor.execute(sql, val)
+            mydb.commit()
+            return JsonResponse(data,safe=False)
         except Exception as e:
             return JsonResponse({"error":True,"text":str(e)},safe=False)
     return HttpResponse("Hello")
+
+@csrf_exempt
+def compare(request):
+    if(request.method== 'POST'):
+        b1 = request.POST['batch1']
+        b2 = request.POST['batch2']
+        year = request.POST['year']
+        sem = request.POST['sem']
+        mycursor = mydb.cursor()
+        sql = "SELECT `data` from results where batch in (%s,%s) AND year=%s AND sem=%s"        
+        val = (request.POST['batch1'],request.POST['batch2'],request.POST['year'],request.POST['sem'])
+        mycursor.execute(sql,val)
+        myresult = mycursor.fetchall()
+        resp = []
+        for x in myresult:
+            resp.append(x[0])
+        return JsonResponse(resp,safe=False)
+    return HttpResponse("Hello")
+
+@csrf_exempt
+def analysis(request):
+    if(request.method== 'POST'):
+        b1 = request.POST['batch']
+        year = request.POST['year']
+        sem = request.POST['sem']
+        mycursor = mydb.cursor()
+        sql = "SELECT `data` from results where batch=%s AND year=%s AND sem=%s"        
+        val = (request.POST['batch'],request.POST['year'],request.POST['sem'])
+        mycursor.execute(sql,val)
+        myresult = mycursor.fetchall()
+        resp = None
+        # for x in myresult:
+        # print(myresult[0][0])
+        resp = myresult[0][0]
+        return JsonResponse(resp,safe=False)
+    return HttpResponse("Hello")
+    
+
+
