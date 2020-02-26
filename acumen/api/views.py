@@ -8,12 +8,16 @@ import numpy as np
 import re, json
 # Create your views here.
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  passwd="",
-  database="acumen"
-)
+try:
+    mydb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="",
+    database="acumen"
+    )
+except:
+    print("------------------------------------\n------------------------------------\n---------Start Mysql Server---------\n------------------------------------\n------------------------------------")
+
 # print(mydb)
 # mycursor = mydb.cursor()
 
@@ -222,7 +226,7 @@ def analysis(request):
         sem = request.POST['sem']
         mycursor = mydb.cursor()
         sql = "SELECT `data` from results where batch=%s AND year=%s AND sem=%s"        
-        val = (request.POST['batch'],request.POST['year'],request.POST['sem'])
+        val = (b1,year,sem)
         mycursor.execute(sql,val)
         myresult = mycursor.fetchall()
         resp = None
@@ -231,6 +235,40 @@ def analysis(request):
         resp = myresult[0][0]
         return JsonResponse(resp,safe=False)
     return HttpResponse("Hello")
+
+@csrf_exempt
+def login(request):
+    if(request.method== 'POST'):
+        uname = request.POST['username']
+        passw = request.POST['password']
+        print(uname,passw)
+        mycursor = mydb.cursor()
+        sql = "SELECT `uid`,`username`,`email`,`access` from users where username=%s AND password=%s"        
+        val = (uname,passw)
+        mycursor.execute(sql,val)
+        myresult = mycursor.fetchall()
+        resp = {"error":True}
+        print(len(myresult))
+        if(len(myresult)==1):
+            request.session['uid'] = myresult[0][0]
+            request.session['username'] =  myresult[0][1]
+            request.session['email'] =  myresult[0][2]
+            request.session['access'] =  myresult[0][3]
+            # print(uid,username,email,access,request.session['uid'])
+            resp = {"uid":myresult[0][0],"username":myresult[0][1],"email":myresult[0][2],"access":myresult[0][3],"error":False}
+        else:
+            resp = {"msg":"Username or Password Missmatch","error":True}
+        # for x in myresult:
+        # print(myresult[0][0])
+        # resp = myresult[0][0]
+        return JsonResponse(resp,safe=False)
+    return HttpResponse("Hello")
+@csrf_exempt
+def check_login(request):
+    resp = {}
+    print(request.session)
+    resp["uid"] = request.session.get('uid')
+    return JsonResponse(resp,safe=False)
     
 
 

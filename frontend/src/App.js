@@ -6,18 +6,37 @@ import Home from './Layouts/Home';
 import Header from './Components/Header';
 import Compare from './Layouts/Compare';
 import Analysis from './Layouts/Analysis';
+import Login from './Layouts/Login';
 
 
 class App extends React.Component {
+    
+    state ={
+        login:false
+    }
 
+    chngLogin = (state,creds) => {
+        this.setState({login:state});
+    }
     render() {
         return (
             <Router>
-                <Header />
                 <Switch>
-                    <Route path="/Compare" component={Compare} />
-                    <Route path="/Analysis" component={Analysis} />
-                    <Route path="/" component={Home}/>
+                    {
+                        this.state.login?
+                        (
+                            <Router>
+                                <Header />
+                                <Switch>
+                                        <Route path="/Compare" component={Compare} />
+                                        <Route path="/Analysis" component={Analysis} />
+                                        <Route path="/" component={Home}/>
+                                </Switch>
+                            </Router>
+                        ):
+                        <Route path="/" render={props => <Login {...props} logFn={this.chngLogin} />} />
+
+                    }
                 </Switch>
             </Router>
 
