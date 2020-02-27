@@ -250,6 +250,29 @@ def facultymap(request):
     return HttpResponse("Forbidden Get Request")
 
 @csrf_exempt
+def createuser(request):
+    if(request.method == 'POST'):
+        resp = {}
+        if request.session.get('access')==None:
+            resp["error"] = True
+            resp["msg"] = "User not loggedin"
+        elif request.session.get('access')==0:
+            resp["error"] = True
+            resp["msg"] = "No privilages to create user"
+        else:
+            try:
+                mycursor = mydb.cursor()
+                sql = "INSERT INTO `users`(`username`,`email`,`password`,`access`) VALUES (%s,%s,%s,%s)"
+                val = (request.POST['uname'],request.POST['email'],request.POST['password'],request.POST['loa'])
+                mycursor.execute(sql, val)
+                mydb.commit()
+                resp["error"] = False
+            except Exception as e:
+                resp = {"error":True,"msg":str(e)}
+        return JsonResponse(resp,safe=False)
+    return HttpResponse("Forbidden Get Request")
+
+@csrf_exempt
 def compare(request):
     if(request.method== 'POST'):
         b1 = request.POST['batch1']

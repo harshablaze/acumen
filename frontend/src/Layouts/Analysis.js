@@ -13,8 +13,6 @@ class Analysis extends React.Component {
         },
         fmap:{},
         faculty: [],
-        name: "",
-        // name: ""
     }
     submitFn = (e) => {
         e.preventDefault();

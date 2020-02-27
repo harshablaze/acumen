@@ -21,6 +21,9 @@ class Header extends React.Component {
                             <Link className="nav-link text-white" to="/">Home</Link>
                             <Link className="nav-link text-white" to="/Compare">Compare</Link>
                             <Link className="nav-link text-white" to="/Analysis">Analysis</Link>
+                            <NavDropdown className="text-white" title="User Mgmnt" id="drop2">
+                                <NavDropdown.Item as={Link} to="/AddUser">Add User</NavDropdown.Item>
+                            </NavDropdown>
                             <NavDropdown className="text-white" title={this.props.User?this.props.User.username:"User"} id="drop1">
                                 <Button className="dropdown-item text-black" onClick={this.logout} variant="link">Logout</Button>
                             </NavDropdown>
