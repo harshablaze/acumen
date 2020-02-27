@@ -11,31 +11,64 @@ class Analysis extends React.Component {
             secdata:[],
             classdata:{},
         },
+        fmap:{},
+        faculty: [],
         name: "",
         // name: ""
     }
     submitFn = (e) => {
         e.preventDefault();
         this.setState({loading:true});
+        fetch("api/getfaculty/").then(res=>res.json()).then(res => {
+            this.setState({faculty:res})
+        })
         const data = new FormData();
         data.append('year', this.state.year);
         data.append('batch', this.state.batch);
         data.append('sem', this.state.sem);
         // data.append('name', this.state.name);
-        axios.post("api/analysis/", data, { // receive two parameter endpoint url ,form data 
-        })
+        axios.post("api/analysis/", data)
         .then(res => { // then print response status
-            var respo = JSON.parse(res.data);
-            if(respo.error==false)
+
+            if(res.data.error==false) {
+                var respo = JSON.parse(res.data.data);
                 this.setState({loading:false,resp:respo});
+            }
             else {
+                console.log(res.data);
+                
                 this.setState({loading:false});
-                alert("Failed Processing PDF");
+                alert(res.data.msg);
             }
             // console.log(respo)
         })
     }
+    FacultyMap = (e) => {
+        e.preventDefault();
+        console.log(this.state.fmap);
+        const data = new FormData();
+        data.append("batch",this.state.batch)
+        data.append("sem",this.state.sem)
+        data.append("year",this.state.year)
+        data.append("fmap",JSON.stringify(this.state.fmap))
+        axios.post("api/facultymap/", data)
+        .then(res => { // then print response status
+            if(res.data.error==false) {
+                alert("done");
+            }
+            else {
+                alert(res.data.msg);
+            }
+        })
+    }
     render() {
+        if(this.state.fmap=={} && this.state.resp.subjects) {
+            var fmap = {}
+            this.state.resp.subjects.map(subj => {
+                fmap[subj] = ""
+            }) 
+            this.setState({"fmap":fmap});
+        }
         return(
             <Container>
             <Form style={{marginTop:30,textAlign:"center"}} onSubmit={this.submitFn} encType="multipart/form-data">
@@ -71,6 +104,41 @@ class Analysis extends React.Component {
                     } Retrieve
                 </Button>
             </Form>
+            <Container>
+                {
+                    this.state.resp.subjects?
+                    (<div className="mt-4 text-center">
+
+                    <h3 className="text-center">Faculty Mapping</h3>
+                    <Form onSubmit={this.FacultyMap}>
+                        <datalist id="faculty">
+                            {
+                                this.state.faculty.map(name => 
+                                    <option value={name.uid}>{name.uname}</option>
+                                    )
+                                }
+                        </datalist>
+                        {
+                            this.state.resp.subjects.map(subj => 
+                                <Form.Group>
+                                    <input className="form-control" id={subj} type="text" value={this.state.fmap[subj]} list="faculty" id={subj} onChange={
+                                        (ele) => {
+                                            let fmap = this.state.fmap  // creating copy of state variable jasper
+                                            fmap[ele.target.id] = ele.target.value;                     // update the name property, assign a new value                 
+                                            this.setState({"fmap":fmap})                               // return new object jasper object
+                                        }} placeholder={"faculty for "+subj} />
+                                </Form.Group>
+                            )
+                        }
+                        <Button variant="secondary" disabled={this.state.loading} type="submit">
+                            {
+                                this.state.loading?<Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />:null
+                            } Map
+                        </Button>
+                    </Form>
+                    </div>):null
+                }
+            </Container>
             {   
                 this.state.resp!={}?(
                 this.state.resp.secdata.map((val,ind) =>

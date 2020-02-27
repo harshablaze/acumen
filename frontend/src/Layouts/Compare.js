@@ -19,17 +19,15 @@ class Compare extends React.Component {
         this.setState({loading:true});
         var data = new FormData();
         data.append("batch1",this.state.batch1);
-        
         data.append("batch2",this.state.batch2);
         data.append("year",this.state.year);
         data.append("sem",this.state.sem);
         axios.post("api/compare/", data, { 
         })
         .then(res => { 
-            if(res.data){
+            if(!res.data.error){
                 var data = []
-                res.data.forEach(element => {
-                    
+                res.data.data.forEach(element => {
                     data.push(JSON.parse(element));
                 });
                 // console.log(typeof res.data,res.data,res.data[0])
@@ -37,14 +35,11 @@ class Compare extends React.Component {
             }
             else {
                 this.setState({loading:false});
-                alert("Failed to retrive data");
+                alert(res.data.msg);
             }
-            console.log(res.data)
-            
         })
     }
     render() {
-        console.log(this.state.resp[0])
         let graph = [];
         let subjs = [];
         if(this.state.loaded) {

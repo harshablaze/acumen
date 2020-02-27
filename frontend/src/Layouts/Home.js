@@ -83,6 +83,17 @@ class Home extends React.Component {
                     } Upload
                 </Button>
             </Form>
+            <Container>
+                <Form>
+                    {
+                        this.state.resp.subjects?this.state.resp.subjects.map(subj => 
+                            <Form.Group>
+                                <Form.Control id={subj} placeholder={"faculty fo "+subj} />
+                            </Form.Group>
+                        ):null
+                    }
+                </Form>
+            </Container>
             {   
                 this.state.resp!={}?(
                 this.state.resp.secdata.map((val,ind) =>

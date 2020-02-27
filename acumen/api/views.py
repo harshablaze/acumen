@@ -45,7 +45,7 @@ def df_column_uniquify(df):
     df.columns = new_columns
     return df
 
-def decoder(fileupd):
+def decoder(fileupd,rawinput):
     # data = fileupd.read()
     df = read_pdf(fileupd,spreadsheet=True,stream=True,multiple_tables=True,pages="all",guess=False)
     # df = df_column_uniquify(df)
@@ -131,10 +131,32 @@ def decoder(fileupd):
 
 
     cse={}
-    cse["A"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0(([0-5][0-9])|(60)))|(L((0[0-9])|1[012])))')]
-    cse["B"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))|(L((1[3-9])|2[0-4]))')]
-    cse["C"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3..1265..((1((2[1-9])|([3-8][0-9]))))|(L((2[5-9])|[34][0-9]))')]
+    batch = rawinput["year"][2]+rawinput["year"][3]
+    cse["A"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+batch+r'1265..((0(([0-5][0-9])|(60))))')]
+    cse["A"] = pd.concat([
+        cse["A"],
+        branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+str(int(batch)+1)+r'1265..(L((0[0-9])|1[012]))')]
+    ])
+    cse["B"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+batch+r'1265..((0((6[1-9])|([7-9][0-9])))|(1(([0-1][0-9])|(20))))')]
+    cse["B"] = pd.concat([
+        cse["B"],
+        branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+str(int(batch)+1)+r'1265..(L((1[3-9])|2[0-4]))')]
+    ])    
+    cse["C"] = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+batch+r'1265..((1((2[1-9])|([3-8][0-9]))))')]
+    cse["C"] = pd.concat([
+        cse["C"],
+        branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+str(int(batch)+1)+r'1265..(L((2[5-9])|[34][0-9]))')]
+    ])    
+    readmit = branchdf[2].loc[branchdf[2].iloc[:,0].str.contains(r'3'+batch[0]+r'[^'+batch[1]+(str(int(batch[1])+1))+r']1265.....')]
+    # print(readmit)
+    # for index, rows in cse["B"].iterrows(): 
+    #     print(rows.Rollno) 
+    cse["C"] = pd.concat([
+        cse["C"],
+        readmit
+    ])
     resp = {}
+    resp["subjects"] = list(branchsubs[2])[3:]
     resp["secdata"] = []
     resp["classdata"] = {}
     resp["classdata"]["subjects"] = []
@@ -155,7 +177,10 @@ def decoder(fileupd):
                 subj["subcnt"] += subj["grades"][gra]
             subj["failcnt"] = int(cse[section].query(subject+' =="F"')[subject].count())
             subj["passcnt"] = int(subj["subcnt"]-subj["failcnt"])
-            subj["passper"] = round((subj["passcnt"]/subj["subcnt"])*100,2)
+            if subj["subcnt"]==0:
+                subj["passper"] = 100
+            else:
+                subj["passper"] = round((subj["passcnt"]/subj["subcnt"])*100,2)
             secdata["subjects"].append(subj)
             # resp.append(subject+" : "+str(round(((totalno-cse[section].query(subject+' =="F"')[subject].count())/cse[section].Rollno.count())*100,2))+", count: "+str(totalno-cse[section].query(subject+' =="F"')[subject].count())+"\n")
         # print("\n")
@@ -188,7 +213,9 @@ def index(request):
         fileup = request.FILES["pdffile"]
         # data = fileup.read()
         try:
-            data = decoder(fileup)
+            jf = {}
+            jf["year"] = request.POST['batch']
+            data = decoder(fileup,jf)
             mycursor = mydb.cursor()
             sql = "INSERT INTO `results`(`batch`, `year`, `sem`, `data`) VALUES (%s,%s,%s,%s)"
             # print(request.POST['batch'],request.POST['year'],request.POST['sem'],data)
@@ -198,7 +225,29 @@ def index(request):
             return JsonResponse(data,safe=False)
         except Exception as e:
             return JsonResponse({"error":True,"text":str(e)},safe=False)
-    return HttpResponse("Hello")
+    return HttpResponse("Forbidden Get Request")
+
+@csrf_exempt
+def facultymap(request):
+    if(request.method == 'POST') :
+        resp = {}
+        print(request.POST['fmap'])
+        try:
+            fmaps = json.loads(request.POST['fmap'])
+            # json.loads
+            mycursor = mydb.cursor()
+            for x in fmaps.keys():
+                print(x)
+                sql = "INSERT INTO `facultymap`(`sub`, `batch`, `year`, `sem`, `uid`) VALUES (%s,%s,%s,%s,%s)"
+                # print(request.POST['batch'],request.POST['year'],request.POST['sem'],data)
+                val = (x,request.POST['batch'],request.POST['year'],request.POST['sem'],fmaps[x])
+                mycursor.execute(sql, val)
+            mydb.commit()
+            resp["error"] = False
+        except Exception as e:
+            resp = {"error":True,"msg":str(e)}
+        return JsonResponse(resp,safe=False)
+    return HttpResponse("Forbidden Get Request")
 
 @csrf_exempt
 def compare(request):
@@ -212,11 +261,16 @@ def compare(request):
         val = (request.POST['batch1'],request.POST['batch2'],request.POST['year'],request.POST['sem'])
         mycursor.execute(sql,val)
         myresult = mycursor.fetchall()
-        resp = []
-        for x in myresult:
-            resp.append(x[0])
+        resp = {}
+        if len(myresult)==2:
+            resp["data"] = []
+            resp["error"] = False
+            for x in myresult:
+                resp["data"].append(x[0])
+        else:
+            resp = {"msg":"No Data found","error":True}
         return JsonResponse(resp,safe=False)
-    return HttpResponse("Hello")
+    return HttpResponse("Forbidden Get Request")
 
 @csrf_exempt
 def analysis(request):
@@ -230,11 +284,14 @@ def analysis(request):
         mycursor.execute(sql,val)
         myresult = mycursor.fetchall()
         resp = None
+        if(len(myresult)==1):
+            resp = {"data":myresult[0][0],"error":False}
+        else:
+            resp = {"error":True,"msg":"No Data Found"}
         # for x in myresult:
         # print(myresult[0][0])
-        resp = myresult[0][0]
         return JsonResponse(resp,safe=False)
-    return HttpResponse("Hello")
+    return HttpResponse("Forbidden Get Request")
 
 @csrf_exempt
 def login(request):
@@ -262,12 +319,47 @@ def login(request):
         # print(myresult[0][0])
         # resp = myresult[0][0]
         return JsonResponse(resp,safe=False)
-    return HttpResponse("Hello")
+    return HttpResponse("Forbidden Get Request")
 @csrf_exempt
 def check_login(request):
     resp = {}
     print(request.session)
-    resp["uid"] = request.session.get('uid')
+    if request.session.get('uid')!=None:
+        resp["uid"] = request.session.get('uid')
+        resp["username"] = request.session.get('username')
+        resp["email"] = request.session.get('email')
+        resp["access"] = request.session.get('access')
+        resp["status"] = True
+    else:
+        resp["status"] = False
+    return JsonResponse(resp,safe=False)
+
+@csrf_exempt
+def logout(request):
+    resp = {}
+    print(request.session)
+    if request.session.get('uid')!=None:
+        del request.session['uid']
+        del request.session['username']
+        del request.session['email']
+        del request.session['access']
+        resp["msg"] = "Successfully Logged out"
+        resp["status"] = True
+    else:
+        resp["status"] = False
+        resp["msg"] = "No Logged Sessions"
+    return JsonResponse(resp,safe=False)
+
+@csrf_exempt
+def getfaculty(request):
+    mycursor = mydb.cursor()
+    sql = "SELECT `uid`,`username` from users"        
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    resp = []
+    if(len(myresult)>0):
+        for x in myresult:
+            resp.append({"uid":x[0],"uname":x[1]})
     return JsonResponse(resp,safe=False)
     
 

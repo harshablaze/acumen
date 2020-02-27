@@ -8,15 +8,28 @@ import Compare from './Layouts/Compare';
 import Analysis from './Layouts/Analysis';
 import Login from './Layouts/Login';
 
+var user = {}
 
 class App extends React.Component {
     
     state ={
-        login:false
+        login:false,
+        creds: null
     }
-
     chngLogin = (state,creds) => {
-        this.setState({login:state});
+        this.setState({login:state,creds:creds});
+    }
+    logout = async () => {
+        var resp = await fetch("api/logout/");
+        resp = await resp.json();
+        console.log(resp);
+        return resp;
+    }
+    componentDidMount() {
+        fetch("api/checklogin/").then(resp => resp.json()).then(resp => {
+            console.log(resp)
+            this.chngLogin(resp.status,resp)
+        })
     }
     render() {
         return (
@@ -26,7 +39,7 @@ class App extends React.Component {
                         this.state.login?
                         (
                             <Router>
-                                <Header />
+                                <Header logFn={this.chngLogin} User={this.state.creds} logout={this.logout} />
                                 <Switch>
                                         <Route path="/Compare" component={Compare} />
                                         <Route path="/Analysis" component={Analysis} />
@@ -44,5 +57,7 @@ class App extends React.Component {
 
     }
 }
+
+// export 
 
 export default App;
