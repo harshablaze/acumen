@@ -1,6 +1,6 @@
 import React from 'react';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
-import Link from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import axios from 'axios';
 
 class Analysis extends React.Component {
@@ -17,9 +17,7 @@ class Analysis extends React.Component {
     submitFn = (e) => {
         e.preventDefault();
         this.setState({loading:true});
-        fetch("api/getfaculty/").then(res=>res.json()).then(res => {
-            this.setState({faculty:res})
-        })
+
         const data = new FormData();
         data.append('year', this.state.year);
         data.append('batch', this.state.batch);
@@ -105,36 +103,9 @@ class Analysis extends React.Component {
             <Container>
                 {
                     this.state.resp.subjects?
-                    (<div className="mt-4 text-center">
-
-                    <h3 className="text-center">Faculty Mapping</h3>
-                    <Form onSubmit={this.FacultyMap}>
-                        <datalist id="faculty">
-                            {
-                                this.state.faculty.map(name => 
-                                    <option value={name.uid}>{name.uname}</option>
-                                    )
-                                }
-                        </datalist>
-                        {
-                            this.state.resp.subjects.map(subj => 
-                                <Form.Group>
-                                    <input className="form-control" id={subj} type="text" value={this.state.fmap[subj]} list="faculty" id={subj} onChange={
-                                        (ele) => {
-                                            let fmap = this.state.fmap  // creating copy of state variable jasper
-                                            fmap[ele.target.id] = ele.target.value;                     // update the name property, assign a new value                 
-                                            this.setState({"fmap":fmap})                               // return new object jasper object
-                                        }} placeholder={"faculty for "+subj} />
-                                </Form.Group>
-                            )
-                        }
-                        <Button variant="secondary" disabled={this.state.loading} type="submit">
-                            {
-                                this.state.loading?<Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />:null
-                            } Map
-                        </Button>
-                    </Form>
-                    </div>):null
+                    (
+                        <Link className="btn btn-outline-info" to={{pathname:"/Facultymap",state:this.state}}>Map</Link>
+                    ):null
                 }
             </Container>
             {   

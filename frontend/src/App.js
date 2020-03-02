@@ -8,6 +8,7 @@ import Compare from './Layouts/Compare';
 import Analysis from './Layouts/Analysis';
 import Login from './Layouts/Login';
 import AddUser from './Layouts/AddUser';
+import Facultymap from './Layouts/Facultymap';
 
 var user = {}
 
@@ -42,9 +43,10 @@ class App extends React.Component {
                             <Router>
                                 <Header logFn={this.chngLogin} User={this.state.creds} logout={this.logout} />
                                 <Switch>
-                                        <Route path="/AddUser" component={AddUser} />
-                                        <Route path="/Compare" component={Compare} />
-                                        <Route path="/Analysis" component={Analysis} />
+                                        <Route path="/AddUser" exact component={AddUser} />
+                                        <Route path="/Facultymap" exact component={Facultymap} />
+                                        <Route path="/Compare" exact component={Compare} />
+                                        <Route path="/Analysis" exact component={Analysis} />
                                         <Route path="/" component={Home}/>
                                 </Switch>
                             </Router>

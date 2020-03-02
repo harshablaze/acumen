@@ -1,6 +1,6 @@
 import React from 'react';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table, Alert} from 'react-bootstrap';
-import Link from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import axios from 'axios';
 import '../login.css';
 import avatar from '../avatar.png';

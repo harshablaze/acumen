@@ -18,6 +18,9 @@ class Home extends React.Component {
     submitFn = (e) => {
         e.preventDefault();
         this.setState({loading:true});
+        fetch("api/getfaculty/").then(res=>res.json()).then(res => {
+            this.setState({faculty:res})
+        })
         const data = new FormData();
         data.append('pdffile', this.state.pdf);
         data.append('year', this.state.year);

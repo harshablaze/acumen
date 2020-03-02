@@ -238,9 +238,9 @@ def facultymap(request):
             mycursor = mydb.cursor()
             for x in fmaps.keys():
                 print(x)
-                sql = "INSERT INTO `facultymap`(`sub`, `batch`, `year`, `sem`, `uid`) VALUES (%s,%s,%s,%s,%s)"
+                sql = "INSERT INTO `facultymap`(`sub`, `batch`, `year`, `sem`,`section` ,`uid`) VALUES (%s,%s,%s,%s,%s,%s)"
                 # print(request.POST['batch'],request.POST['year'],request.POST['sem'],data)
-                val = (x,request.POST['batch'],request.POST['year'],request.POST['sem'],fmaps[x])
+                val = (x,request.POST['batch'],request.POST['year'],request.POST['sem'],request.POST['section'],fmaps[x])
                 mycursor.execute(sql, val)
             mydb.commit()
             resp["error"] = False
@@ -306,7 +306,7 @@ def analysis(request):
         val = (b1,year,sem)
         mycursor.execute(sql,val)
         myresult = mycursor.fetchall()
-        resp = None
+        resp = {}
         if(len(myresult)==1):
             resp = {"data":myresult[0][0],"error":False}
         else:
@@ -385,5 +385,17 @@ def getfaculty(request):
             resp.append({"uid":x[0],"uname":x[1]})
     return JsonResponse(resp,safe=False)
     
-
+@csrf_exempt
+def reconnect(request):
+    global mydb
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            passwd="",
+            database="acumen"
+        )
+        return HttpResponse("Reconnected")
+    except Exception as e:
+        return HttpResponse("Failed")
 
