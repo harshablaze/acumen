@@ -9,8 +9,7 @@ import Analysis from './Layouts/Analysis';
 import Login from './Layouts/Login';
 import AddUser from './Layouts/AddUser';
 import Facultymap from './Layouts/Facultymap';
-
-var user = {}
+import host from './Host';
 
 class App extends React.Component {
     
@@ -22,13 +21,14 @@ class App extends React.Component {
         this.setState({login:state,creds:creds});
     }
     logout = async () => {
-        var resp = await fetch("api/logout/");
+        var resp = await fetch(host+"api/logout/");
         resp = await resp.json();
         console.log(resp);
         return resp;
     }
     componentDidMount() {
-        fetch("api/checklogin/").then(resp => resp.json()).then(resp => {
+        console.log(host+"api/checklogin/")
+        fetch(host+"api/checklogin/").then(resp => resp.json()).then(resp => {
             console.log(resp)
             this.chngLogin(resp.status,resp)
         })
@@ -65,3 +65,4 @@ class App extends React.Component {
 // export 
 
 export default App;
+

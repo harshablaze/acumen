@@ -2,6 +2,8 @@ import React from "react";
 import { Container, Row, Col, Form ,Button,Spinner,Table} from "react-bootstrap";
 import axios from 'axios';
 import {BarChart,XAxis,Legend,Tooltip,Bar,CartesianGrid,YAxis} from 'recharts';
+import host from '../App'
+
 class Compare extends React.Component {
     state = {
         loading: false,
@@ -22,7 +24,7 @@ class Compare extends React.Component {
         data.append("batch2",this.state.batch2);
         data.append("year",this.state.year);
         data.append("sem",this.state.sem);
-        axios.post("api/compare/", data, { 
+        axios.post(host+"api/compare/", data, { 
         })
         .then(res => { 
             if(!res.data.error){

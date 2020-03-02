@@ -3,7 +3,7 @@ import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormL
 import {Link,Redirect} from 'react-router-dom';
 import axios from 'axios';
 import Section from '../Components/Section';
-
+import host from '../Host';
 
 class Facultymap extends React.Component {
     state = {
@@ -16,7 +16,7 @@ class Facultymap extends React.Component {
             this.setState({dead:true});
             return;
         }
-        fetch("api/getfaculty/").then(res=>res.json()).then(res => {
+        fetch(host+"api/getfaculty/").then(res=>res.json()).then(res => {
             this.setState({faculty:res})
         })
     }
@@ -72,7 +72,7 @@ class MapComponent extends React.Component {
         data.append("year",this.state.year)
         data.append("section",this.state.section)
         data.append("fmap",JSON.stringify(this.state.fmap))
-        axios.post("api/facultymap/", data)
+        axios.post(host+"api/facultymap/", data)
         .then(res => { // then print response status
             if(res.data.error==false) {
                 alert("done");

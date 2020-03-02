@@ -5,6 +5,8 @@ import axios from 'axios';
 import '../login.css';
 import avatar from '../avatar.png';
 import anits from '../anits.jpg';
+import host from '../Host'
+
 class Login extends React.Component {
     state = {
         username:"",
@@ -19,7 +21,7 @@ class Login extends React.Component {
         const data = new FormData();
         data.append('username', this.state.username);
         data.append('password', this.state.password);
-        axios.post("api/login/", data)
+        axios.post(host+"api/login/", data)
         .then(res => { // then print response status
             if(res.data.error==false){
                 this.setState({loading:false,resp:res.data,status:""});

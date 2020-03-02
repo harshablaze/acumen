@@ -2,7 +2,7 @@ import React from 'react';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-
+import host from '../Host';
 class Analysis extends React.Component {
     state = {
         pdf: null,
@@ -23,7 +23,7 @@ class Analysis extends React.Component {
         data.append('batch', this.state.batch);
         data.append('sem', this.state.sem);
         // data.append('name', this.state.name);
-        axios.post("api/analysis/", data)
+        axios.post(host+"api/analysis/", data)
         .then(res => { // then print response status
 
             if(res.data.error==false) {
@@ -47,7 +47,7 @@ class Analysis extends React.Component {
         data.append("sem",this.state.sem)
         data.append("year",this.state.year)
         data.append("fmap",JSON.stringify(this.state.fmap))
-        axios.post("api/facultymap/", data)
+        axios.post(host+"api/facultymap/", data)
         .then(res => { // then print response status
             if(res.data.error==false) {
                 alert("done");

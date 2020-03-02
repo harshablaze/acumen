@@ -2,6 +2,7 @@ import React from 'react';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
 import Link from 'react-router-dom';
 import axios from 'axios';
+import host from '../Host'
 
 class Home extends React.Component {
     state = {
@@ -18,7 +19,7 @@ class Home extends React.Component {
     submitFn = (e) => {
         e.preventDefault();
         this.setState({loading:true});
-        fetch("api/getfaculty/").then(res=>res.json()).then(res => {
+        fetch(host+"api/getfaculty/").then(res=>res.json()).then(res => {
             this.setState({faculty:res})
         })
         const data = new FormData();
@@ -27,7 +28,7 @@ class Home extends React.Component {
         data.append('batch', this.state.batch);
         data.append('sem', this.state.sem);
         // data.append('name', this.state.name);
-        axios.post("api/", data, { // receive two parameter endpoint url ,form data 
+        axios.post(host+"api/", data, { // receive two parameter endpoint url ,form data 
         })
         .then(res => { // then print response status
             if(res.data.error==false)
@@ -47,7 +48,7 @@ class Home extends React.Component {
         data.append("sem",this.state.sem)
         data.append("year",this.state.year)
         data.append("fmap",JSON.stringify(this.state.fmap))
-        axios.post("api/facultymap/", data)
+        axios.post(host+"api/facultymap/", data)
         .then(res => { // then print response status
             if(res.data.error==false) {
                 alert("done");

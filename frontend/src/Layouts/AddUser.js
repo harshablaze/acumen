@@ -2,7 +2,7 @@ import React from 'react';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-
+import host from '../Host';
 class AddUser extends React.Component {
     state = {
         uname:"",
@@ -18,7 +18,7 @@ class AddUser extends React.Component {
         data.append("password",this.state.password)
         data.append("email",this.state.email)
         data.append("loa",this.state.loa)
-        axios.post("api/adduser/", data)
+        axios.post(host+"api/adduser/", data)
         .then(res => { // then print response status
             if(res.data.error==false) {
                 alert("User Succesfully added");
