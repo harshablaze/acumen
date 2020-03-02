@@ -334,7 +334,7 @@ def login(request):
             request.session['username'] =  myresult[0][1]
             request.session['email'] =  myresult[0][2]
             request.session['access'] =  myresult[0][3]
-            # print(uid,username,email,access,request.session['uid'])
+            print(request.session['uid'],request.session['username'])
             resp = {"uid":myresult[0][0],"username":myresult[0][1],"email":myresult[0][2],"access":myresult[0][3],"error":False}
         else:
             resp = {"msg":"Username or Password Missmatch","error":True}

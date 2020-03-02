@@ -2,7 +2,7 @@ import React from "react";
 import { Container, Row, Col, Form ,Button,Spinner,Table} from "react-bootstrap";
 import axios from 'axios';
 import {BarChart,XAxis,Legend,Tooltip,Bar,CartesianGrid,YAxis} from 'recharts';
-import host from '../App'
+import host from '../Host'
 
 class Compare extends React.Component {
     state = {
