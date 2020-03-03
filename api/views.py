@@ -413,10 +413,10 @@ def getresults(request):
             for x in myresult:
                 data = json.loads(x[5])
                 for x2 in data["secdata"]:
-                    print(x2["section"],x[4],x2["section"]==x[4])
+                    # print(x2["section"],x[4],x2["section"]==x[4])
                     if(x2["section"]==x[4]):
                         for x3 in x2["subjects"]:
-                            print(x3["name"],x[3],x3["name"]==x[3])
+                            # print(x3["name"],x[3],x3["name"]==x[3])
                             if(x3["name"]==x[3]):
                                 resp.append({"batch":x[0],"year":x[1],"sem":x[2],"sub":x[3],"sec":x[4],"data":x3})
         
