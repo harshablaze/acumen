@@ -49,12 +49,12 @@ class App extends React.Component {
                             <Router>
                                 <Header logFn={this.chngLogin} User={this.state.user} logout={this.logout} />
                                 <Switch>
-                                        <Route path="/AddUser" exact component={AddUser} />
+                                        <Route path="/AddUser" exact render={props => <AddUser {...props} user={this.state.user} />} />
                                         <Route path="/Facultymap" exact component={Facultymap} />
                                         <Route path="/Compare" exact component={Compare} />
                                         <Route path="/Analysis" exact component={Analysis} />
                                         {
-                                            this.state.user.access==0||this.state.user.access==2?
+                                            this.state.user.access==1||this.state.user.access==0?
                                                 <Route path="/" render={props => <FacultyHome {...props} user={this.state.user} />}/>:
                                                 <Route path="/" render={props => <Home {...props} user={this.state.user} />}/>
                                         }

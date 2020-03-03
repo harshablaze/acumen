@@ -14,6 +14,8 @@ class AddUser extends React.Component {
         e.preventDefault();
         console.log(this.state);
         var data = new FormData();
+        data.append("token",this.props.user.token)
+        data.append("uid",this.props.user.uid)
         data.append("uname",this.state.uname)
         data.append("password",this.state.password)
         data.append("email",this.state.email)

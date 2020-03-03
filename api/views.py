@@ -252,23 +252,29 @@ def facultymap(request):
 @csrf_exempt
 def createuser(request):
     if(request.method == 'POST'):
+        mycursor = mydb.cursor()
+
+        sql = "SELECT `access` from users where uid=%s AND token=%s"   
+        val = (request.POST['uid'],request.POST['token'])
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
         resp = {}
-        if request.session.get('access')==None:
-            resp["error"] = True
-            resp["msg"] = "User not loggedin"
-        elif request.session.get('access')==0:
-            resp["error"] = True
-            resp["msg"] = "No privilages to create user"
+        if(len(myresult)==1):
+            if myresult[0][0]==0:
+                resp["error"] = True
+                resp["msg"] = "No privilages to create user"
+            else:
+                try:
+                    mycursor = mydb.cursor()
+                    sql = "INSERT INTO `users`(`username`,`email`,`password`,`access`) VALUES (%s,%s,%s,%s)"
+                    val = (request.POST['uname'],request.POST['email'],request.POST['password'],request.POST['loa'])
+                    mycursor.execute(sql, val)
+                    mydb.commit()
+                    resp["error"] = False
+                except Exception as e:
+                    resp = {"error":True,"msg":str(e)}
         else:
-            try:
-                mycursor = mydb.cursor()
-                sql = "INSERT INTO `users`(`username`,`email`,`password`,`access`) VALUES (%s,%s,%s,%s)"
-                val = (request.POST['uname'],request.POST['email'],request.POST['password'],request.POST['loa'])
-                mycursor.execute(sql, val)
-                mydb.commit()
-                resp["error"] = False
-            except Exception as e:
-                resp = {"error":True,"msg":str(e)}
+            resp = {"error":True,"msg":"Invalid request"}
         return JsonResponse(resp,safe=False)
     return HttpResponse("Forbidden Get Request")
 
@@ -397,7 +403,7 @@ def getresults(request):
     if(request.method=='POST'):
         mycursor = mydb.cursor()
         sql = ('SELECT fm.batch,fm.year,fm.sem,fm.sub,fm.section,r.data,r.id from facultymap fm ,users u,results r WHERE'
-              '(u.uid=fm.uid) AND (r.batch=fm.batch) AND (r.year=fm.year) AND (r.sem=fm.sem) AND u.uid=%s ORDER BY r.id ASC')
+              '(u.uid=fm.uid) AND (r.batch=fm.batch) AND (r.year=fm.year) AND (r.sem=fm.sem) AND u.uid=%s ORDER BY r.id DESC')
         val = (request.POST['uid'],)
         mycursor.execute(sql,val)
         myresult = mycursor.fetchall()
