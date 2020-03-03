@@ -5,7 +5,7 @@ from tabula import convert_into,read_pdf
 import pandas as pd
 import mysql.connector
 import numpy as np
-import re, json
+import re, json,string,secrets
 # Create your views here.
 
 try:
@@ -156,7 +156,7 @@ def decoder(fileupd,rawinput):
         readmit
     ])
     resp = {}
-    resp["subjects"] = list(branchsubs[2])[3:]
+    resp["subjects"] = list(branchdf[2].columns)[3:]
     resp["secdata"] = []
     resp["classdata"] = {}
     resp["classdata"]["subjects"] = []
@@ -330,12 +330,18 @@ def login(request):
         resp = {"error":True}
         print(len(myresult))
         if(len(myresult)==1):
-            request.session['uid'] = myresult[0][0]
-            request.session['username'] =  myresult[0][1]
-            request.session['email'] =  myresult[0][2]
-            request.session['access'] =  myresult[0][3]
-            print(request.session['uid'],request.session['username'])
-            resp = {"uid":myresult[0][0],"username":myresult[0][1],"email":myresult[0][2],"access":myresult[0][3],"error":False}
+            # request.session['uid'] = myresult[0][0]
+            # request.session['username'] =  myresult[0][1]
+            # request.session['email'] =  myresult[0][2]
+            # request.session['access'] =  myresult[0][3]
+            token = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(16))
+            sql = "UPDATE `users` SET `token`=%s WHERE uid=%s"        
+            val = (token,myresult[0][0])
+            mycursor = mydb.cursor()
+            mycursor.execute(sql,val)
+            mydb.commit()
+            # print(request.session['uid'],request.session['username'])
+            resp = {"uid":myresult[0][0],"username":myresult[0][1],"email":myresult[0][2],"access":myresult[0][3],"token":token,"error":False}
         else:
             resp = {"msg":"Username or Password Missmatch","error":True}
         # for x in myresult:
@@ -346,31 +352,32 @@ def login(request):
 @csrf_exempt
 def check_login(request):
     resp = {}
-    print(request.session)
-    if request.session.get('uid')!=None:
-        resp["uid"] = request.session.get('uid')
-        resp["username"] = request.session.get('username')
-        resp["email"] = request.session.get('email')
-        resp["access"] = request.session.get('access')
-        resp["status"] = True
+    if(request.method=='POST'):
+        uid = request.POST['uid']
+        token = request.POST['token']
+        mycursor = mydb.cursor()
+        sql = "SELECT `uid`,`username`,`email`,`access`,`token` from users where uid=%s AND token=%s"        
+        val = (uid,token)
+        mycursor.execute(sql,val)
+        myresult = mycursor.fetchall()    
+        if(len(myresult)==1):
+            resp = {"uid":myresult[0][0],"username":myresult[0][1],"email":myresult[0][2],"access":myresult[0][3],"error":False}
+        else:
+            resp["error"] = True
+            resp["msg"] = "Session Expired"
     else:
-        resp["status"] = False
-    return JsonResponse(resp,safe=False)
+        resp["error"] = True
+        resp["msg"] = "Invalid GET request"
+    # print(request.session)
+    # if request.session.get('uid')!=None:
+    #     resp["uid"] = request.session.get('uid')
+    #     resp["username"] = request.session.get('username')
+    #     resp["email"] = request.session.get('email')
+    #     resp["access"] = request.session.get('access')
+    #     resp["status"] = True
+    # else:
+    #     resp["status"] = False
 
-@csrf_exempt
-def logout(request):
-    resp = {}
-    print(request.session)
-    if request.session.get('uid')!=None:
-        del request.session['uid']
-        del request.session['username']
-        del request.session['email']
-        del request.session['access']
-        resp["msg"] = "Successfully Logged out"
-        resp["status"] = True
-    else:
-        resp["status"] = False
-        resp["msg"] = "No Logged Sessions"
     return JsonResponse(resp,safe=False)
 
 @csrf_exempt
@@ -384,7 +391,34 @@ def getfaculty(request):
         for x in myresult:
             resp.append({"uid":x[0],"uname":x[1]})
     return JsonResponse(resp,safe=False)
-    
+
+@csrf_exempt
+def getresults(request):
+    if(request.method=='POST'):
+        mycursor = mydb.cursor()
+        sql = ('SELECT fm.batch,fm.year,fm.sem,fm.sub,fm.section,r.data,r.id from facultymap fm ,users u,results r WHERE'
+              '(u.uid=fm.uid) AND (r.batch=fm.batch) AND (r.year=fm.year) AND (r.sem=fm.sem) AND u.uid=%s ORDER BY r.id ASC')
+        val = (request.POST['uid'],)
+        mycursor.execute(sql,val)
+        myresult = mycursor.fetchall()
+        print(len(myresult))
+        resp = []
+        if((len(myresult)) >= 1):
+            for x in myresult:
+                data = json.loads(x[5])
+                for x2 in data["secdata"]:
+                    print(x2["section"],x[4],x2["section"]==x[4])
+                    if(x2["section"]==x[4]):
+                        for x3 in x2["subjects"]:
+                            print(x3["name"],x[3],x3["name"]==x[3])
+                            if(x3["name"]==x[3]):
+                                resp.append({"batch":x[0],"year":x[1],"sem":x[2],"sub":x[3],"sec":x[4],"data":x3})
+        
+        return JsonResponse(resp,safe=False)
+    else:
+        return JsonResponse({"error":True,"msg":"Invalid Request"})
+            
+
 @csrf_exempt
 def reconnect(request):
     global mydb

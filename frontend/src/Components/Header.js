@@ -1,13 +1,12 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
+import Axios from 'axios';
+import host from '../Host';
 
 class Header extends React.Component {
     logout = () => {
-        this.props.logout().then(data =>{
-            this.props.logFn(!data.status,null);
-
-        });
+        this.props.logout();
         
     }
     render() {
@@ -24,7 +23,7 @@ class Header extends React.Component {
                             <NavDropdown className="text-white" title="User Mgmnt" id="drop2">
                                 <NavDropdown.Item as={Link} to="/AddUser">Add User</NavDropdown.Item>
                             </NavDropdown>
-                            <NavDropdown className="text-white" title={this.props.User?this.props.User.username:"User"} id="drop1">
+                            <NavDropdown className="text-white" title={this.props.User?this.props.User.uname:"User"} id="drop1">
                                 <Button className="dropdown-item text-black" onClick={this.logout} variant="link">Logout</Button>
                             </NavDropdown>
                         </Nav>

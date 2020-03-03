@@ -113,41 +113,6 @@ class Home extends React.Component {
                     } Upload
                 </Button>
             </Form>
-            <Container>
-                {
-                    this.state.resp.subjects?
-                    (<div className="mt-4 text-center">
-
-                    <h3 className="text-center">Faculty Mapping</h3>
-                    <Form onSubmit={this.FacultyMap}>
-                        <datalist id="faculty">
-                            {
-                                this.state.faculty.map(name => 
-                                    <option value={name.uid}>{name.uname}</option>
-                                    )
-                                }
-                        </datalist>
-                        {
-                            this.state.resp.subjects.map(subj => 
-                                <Form.Group>
-                                    <input className="form-control" id={subj} type="text" value={this.state.fmap[subj]} list="faculty" id={subj} onChange={
-                                        (ele) => {
-                                            let fmap = this.state.fmap  // creating copy of state variable jasper
-                                            fmap[ele.target.id] = ele.target.value;                     // update the name property, assign a new value                 
-                                            this.setState({"fmap":fmap})                               // return new object jasper object
-                                        }} placeholder={"faculty for "+subj} />
-                                </Form.Group>
-                            )
-                        }
-                        <Button variant="secondary" disabled={this.state.loading} type="submit">
-                            {
-                                this.state.loading?<Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />:null
-                            } Map
-                        </Button>
-                    </Form>
-                    </div>):null
-                }
-            </Container>
             {   
                 this.state.resp!={}?(
                 this.state.resp.secdata.map((val,ind) =>

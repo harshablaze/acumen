@@ -11,6 +11,6 @@ urlpatterns = [
     path('getfaculty/',views.getfaculty,name='listfaculty'),
     path('facultymap/',views.facultymap,name='mapfaculty'),
     path('adduser/',views.createuser,name='createuser'),
-    path('logout/',views.logout,name='logout'),
-    path('reconnect/',views.reconnect,name='reconnect')
+    path('reconnect/',views.reconnect,name='reconnect'),
+    path('getresults/',views.getresults,name='getresults')
 ]

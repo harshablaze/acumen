@@ -10,44 +10,54 @@ import Login from './Layouts/Login';
 import AddUser from './Layouts/AddUser';
 import Facultymap from './Layouts/Facultymap';
 import host from './Host';
+import User from './User';
+import Axios from 'axios';
+import FacultyHome from './Layouts/FacultyHome';
 
 class App extends React.Component {
     
     state ={
         login:false,
-        creds: null
+        creds: null,
+        user: null
     }
-    chngLogin = (state,creds) => {
-        this.setState({login:state,creds:creds});
+    chngLogin = (state,user) => {
+        this.setState({login:state,user:user});
     }
     logout = async () => {
-        var resp = await fetch(host+"api/logout/");
-        resp = await resp.json();
-        console.log(resp);
-        return resp;
+        this.setState({login:false,user:await this.state.user.logout()});
     }
     componentDidMount() {
-        console.log(host+"api/checklogin/")
-        fetch(host+"api/checklogin/").then(resp => resp.json()).then(resp => {
+        User.prototype.restorelogin().then((resp) => {
+            this.setState({user:resp})
             console.log(resp)
-            this.chngLogin(resp.status,resp)
         })
+        // console.log(host+"api/checklogin/")
+        // fetch(host+"api/checklogin/").then(resp => resp.json()).then(resp => {
+        //     console.log(resp)
+        //     this.chngLogin(resp.status,resp)
+        // })
     }
     render() {
+        console.log(this.state.user)
         return (
             <Router>
                 <Switch>
                     {
-                        this.state.login?
+                        this.state.user!=null?
                         (
                             <Router>
-                                <Header logFn={this.chngLogin} User={this.state.creds} logout={this.logout} />
+                                <Header logFn={this.chngLogin} User={this.state.user} logout={this.logout} />
                                 <Switch>
                                         <Route path="/AddUser" exact component={AddUser} />
                                         <Route path="/Facultymap" exact component={Facultymap} />
                                         <Route path="/Compare" exact component={Compare} />
                                         <Route path="/Analysis" exact component={Analysis} />
-                                        <Route path="/" component={Home}/>
+                                        {
+                                            this.state.user.access==0||this.state.user.access==2?
+                                                <Route path="/" render={props => <FacultyHome {...props} user={this.state.user} />}/>:
+                                                <Route path="/" render={props => <Home {...props} user={this.state.user} />}/>
+                                        }
                                 </Switch>
                             </Router>
                         ):

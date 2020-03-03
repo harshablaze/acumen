@@ -6,6 +6,7 @@ import '../login.css';
 import avatar from '../avatar.png';
 import anits from '../anits.jpg';
 import host from '../Host'
+import User from '../User';
 
 class Login extends React.Component {
     state = {
@@ -18,19 +19,15 @@ class Login extends React.Component {
     submitFn = (e) => {
         e.preventDefault();
         this.setState({loading:true});
-        const data = new FormData();
-        data.append('username', this.state.username);
-        data.append('password', this.state.password);
-        axios.post(host+"api/login/", data)
-        .then(res => { // then print response status
-            if(res.data.error==false){
-                this.setState({loading:false,resp:res.data,status:""});
-                this.props.logFn(true,res.data)
-            }
-            else {
-                this.setState({loading:false,status:res.data.msg});
+        User.prototype.login(this.state.username,this.state.password).then((resp) => {
+            console.log(resp)
+            if(resp.error==false) {
+                this.props.logFn(true,resp.user);
+            } else {
+                this.setState({loading:false,status:resp.msg})
             }
         })
+
     }
     render() {
         var chngval = (e) => {
