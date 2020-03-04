@@ -1,7 +1,6 @@
 import React from 'react';
 import "./index.css";
 import {Link,BrowserRouter as Router,Switch,Route} from 'react-router-dom';
-import {Navbar,Button,Spinner,Card,Container,Row,Col,NavDropdown,Nav,Form, FormLabel,Table} from 'react-bootstrap';
 import Home from './Layouts/Home';
 import Header from './Components/Header';
 import Compare from './Layouts/Compare';

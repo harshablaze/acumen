@@ -1,11 +1,16 @@
 
-body {
+#root {
     height: 100vh;
     width: 100vw;
     font-family: 'Montserrat', sans-serif;
     transition: 1500ms;
 }
-
+.fhfw {
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Montserrat', sans-serif;
+    background-image: url(lock.jpg);
+}
 .login-container {
   top: 50%;
   position: relative;
@@ -54,6 +59,7 @@ body {
 
 .login-form {
   padding: 15px;
+  background-color: #fff;
 }
 
 .login-form h3 {
