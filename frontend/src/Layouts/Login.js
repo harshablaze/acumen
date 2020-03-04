@@ -49,7 +49,7 @@ class Login extends React.Component {
                             <input type="text" className="form-control" id="username" placeholder="Username" onChange={chngval} required/>
                         </div>
                         <div className="form-group">
-                            <input type="password" className="form-control" id="password" placeholder="Password" onChange={chngval} required/>
+                            <input type="password" className={"form-control "+(!!this.state.status&&!this.state.loading?"is-invalid":"")} id="password" placeholder="Password" onChange={chngval} required/>
                         </div>
                         <div className="form-group">
                             <button type="submit" disabled={this.state.loading} className="btn btn-primary btn-lg btn-block">

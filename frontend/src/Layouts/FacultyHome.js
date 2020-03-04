@@ -76,11 +76,11 @@ class TableRow extends React.Component {
                         <Modal.Title>Grades</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Table>
+                        <Table striped hover>
                             <thead>
                                 <tr>
-                                    <td>Grade</td>
-                                    <td>no of students</td>
+                                    <th>Grade</th>
+                                    <th>no of students</th>
                                 </tr>
                             </thead>
                             <tbody>
